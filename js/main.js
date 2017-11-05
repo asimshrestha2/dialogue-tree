@@ -1,9 +1,9 @@
 var Dialogue = (function () {
-    function Dialogue(id, text, type) {
+    function Dialogue(id, text, actor) {
         this.nextDialogue = [];
         this.id = id;
         this.text = text;
-        this.type = type || "npc";
+        this.actor = actor || "npc";
     }
     Dialogue.prototype.addNextDialogue = function (id) {
         this.nextDialogue.push(id);
@@ -14,7 +14,7 @@ var dialogueHTML = function (dialogue) {
     var retE = document.createElement('div');
     retE.classList.add('dialogue');
     retE.setAttribute("data-id", "" + dialogue.id);
-    retE.innerHTML = "<div class=\"entry-point\"></div>\n    <div class=\"next-point\"></div>\n    <div class=\"text\">" + dialogue.text + "</div>";
+    retE.innerHTML = "<div class=\"entry-point\"></div>\n    <div class=\"next-point\"></div>\n    <div class=\"text\">" + dialogue.actor + "</div>\n    <div class=\"text\">" + dialogue.text + "</div>";
     return retE;
 };
 function dragElement(elmnt) {
@@ -83,33 +83,81 @@ var makeSVG = function (tag, attrs) {
     return el;
 };
 var updateLine = function (dimension, elmnt1, elmnt2, elmnt) {
-    elmnt.setAttribute('viewbox', "0 0 " + dimension.height + " " + dimension.width);
-    elmnt.setAttribute('style', "position: absolute; top: " + dimension.top + "; left: " + dimension.left
-        + "; width: " + dimension.width + "px; height: " + dimension.height + "px;");
+    dimension = {
+        top: dimension.top,
+        left: dimension.left,
+        height: (dimension.height <= 12) ? 12 : dimension.height,
+        width: (dimension.width <= 12) ? 12 : dimension.width
+    };
     var line = elmnt.querySelector('line');
     var attrs = {};
-    if (elmnt1.offsetTop < elmnt2.offsetTop) {
-        attrs = (elmnt1.offsetLeft < elmnt2.offsetLeft) ?
-            { x1: "0", y1: "0", x2: dimension.width, y2: dimension.height } :
-            { x1: "0", y1: dimension.height, y2: "0", x2: dimension.width };
+    var svgattrs = { viewbox: "0 0 " + dimension.width + " " + dimension.height,
+        style: "position: absolute; top: " + dimension.top + "px; left: " + dimension.left
+            + "px; width: " + dimension.width + "px; height: " + dimension.height + "px;" };
+    var link = JSON.parse(elmnt.getAttribute('link'));
+    var style = "";
+    if (link.start == elmnt1.getAttribute('data-id')) {
+        style = (elmnt1.offsetLeft < elmnt2.offsetLeft) ?
+            "marker-end: url(#arrowhead); marker-start: none;" :
+            "marker-start: url(#endarrow); marker-end: none;";
     }
     else {
-        attrs = (elmnt1.offsetLeft < elmnt2.offsetLeft) ?
-            { x1: "0", y1: dimension.height, y2: "0", x2: dimension.width } :
-            { x1: "0", y1: "0", x2: dimension.width, y2: dimension.height };
+        style = (elmnt1.offsetLeft > elmnt2.offsetLeft) ?
+            "marker-end: url(#arrowhead); marker-start: none;" :
+            "marker-start: url(#endarrow); marker-end: none;";
     }
+    if (elmnt1.offsetTop < elmnt2.offsetTop) {
+        if (elmnt1.offsetLeft < elmnt2.offsetLeft) {
+            attrs = { x1: "0", y1: "0", x2: (dimension.width), y2: (dimension.height) };
+            console.log(1);
+        }
+        else {
+            attrs = { x1: "0", y1: (dimension.height), y2: "0", x2: (dimension.width) };
+            console.log(2);
+        }
+    }
+    else {
+        if (elmnt1.offsetLeft < elmnt2.offsetLeft) {
+            attrs = { x1: "0", y1: (dimension.height), y2: "0", x2: dimension.width };
+            console.log(3);
+        }
+        else {
+            attrs = { x1: "0", y1: "0", x2: (dimension.width), y2: dimension.height };
+            console.log(4);
+        }
+    }
+    attrs['style'] = style;
     for (var k in attrs)
         line.setAttribute(k, attrs[k]);
+    for (var k in svgattrs)
+        elmnt.setAttribute(k, svgattrs[k]);
 };
 function createLine(dimension, elmnt1, elmnt2) {
+    dimension = {
+        top: dimension.top,
+        left: dimension.left,
+        height: (dimension.height <= 12) ? 12 : dimension.height,
+        width: (dimension.width <= 12) ? 12 : dimension.width
+    };
+    console.log(dimension);
     var retE = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     retE.setAttribute('viewbox', "0 0 " + dimension.height + " " + dimension.width);
     retE.setAttribute('style', "position: absolute; top: " + dimension.top + "; left: " + dimension.left
         + "; width: " + dimension.width + "px; height: " + dimension.height + "px;");
     retE.setAttribute('link', JSON.stringify({ start: elmnt1.getAttribute('data-id'), end: elmnt2.getAttribute('data-id') }));
+    var def = makeSVG('defs', {});
+    var marker = makeSVG('marker', { id: "arrowhead", markerWidth: "12", markerHeight: "12", refX: "12", refY: "6", orient: "auto" });
+    var arrowhead = makeSVG('path', { d: "M0,0 L0,12 L12,6 L0,0", style: "fill: #000000;" });
+    marker.appendChild(arrowhead);
+    def.appendChild(marker);
+    var marker2 = makeSVG('marker', { id: "endarrow", markerWidth: "12", markerHeight: "12", refX: "0", refY: "6", orient: "auto" });
+    var endarrow = makeSVG('path', { d: "M12,12 L12,0 L0,6 L12,12", style: "fill: #000000;" });
+    marker2.appendChild(endarrow);
+    def.appendChild(marker2);
     var line = (elmnt1.offsetTop < elmnt2.offsetTop) ?
-        makeSVG("line", { x1: "0", y1: "0", x2: dimension.width, y2: dimension.height, "stroke-width": "2", stroke: "black" }) :
-        makeSVG("line", { x1: "0", y2: "0", x2: dimension.width, y1: dimension.height, "stroke-width": "2", stroke: "black" });
+        makeSVG("line", { x1: "0", y1: "0", x2: dimension.width, y2: dimension.height, "stroke-width": "2", stroke: "black", 'style': "marker-end: url(#arrowhead);" }) :
+        makeSVG("line", { x1: "0", y2: "0", x2: dimension.width, y1: dimension.height, "stroke-width": "2", stroke: "black", 'style': "marker-end: url(#arrowhead);" });
+    retE.appendChild(def);
     retE.appendChild(line);
     return retE;
 }
@@ -145,9 +193,9 @@ document.addEventListener("DOMContentLoaded", function () {
     var addDialogueBtn = document.getElementById('add-dialogue');
     addDialogueBtn.addEventListener("click", function () {
         var inputText = document.getElementById("dialogText");
-        var inputType = document.getElementById("dialogType");
+        var inputActor = document.getElementById("dialogActor");
         if (inputText.value != null && inputText.value != "") {
-            var d = new Dialogue(count++, inputText.value, inputType.value);
+            var d = new Dialogue(count++, inputText.value, inputActor.value);
             dialogues.push(d);
             var el = dialogueHTML(d);
             el.style.top = "10px";
@@ -156,15 +204,15 @@ document.addEventListener("DOMContentLoaded", function () {
             setLinks(el);
             projectE.appendChild(el);
             inputText.value = "";
-            inputType.value = "";
+            inputActor.value = "";
             inputDialog.classList.toggle('show');
         }
     });
     document.getElementById('cancel-dialogue').addEventListener('click', function () {
         var inputText = document.getElementById("dialogText");
-        var inputType = document.getElementById("dialogType");
+        var inputActor = document.getElementById("dialogActor");
         inputText.value = "";
-        inputType.value = "";
+        inputActor.value = "";
         inputDialog.classList.toggle('show');
     });
     document.getElementById('add-dialog').addEventListener('click', function () {
@@ -217,7 +265,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (data.length != 0) {
                         for (var i = 0; i < data.length; i++) {
                             var dialogue = data[i];
-                            var d = new Dialogue(dialogue.id, dialogue.text, dialogue.type);
+                            var d = new Dialogue(dialogue.id, dialogue.text, dialogue.actor);
                             d.nextDialogue = dialogue.nextDialogue;
                             dialogues.push(d);
                             var el = dialogueHTML(d);
