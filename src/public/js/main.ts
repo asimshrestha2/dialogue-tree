@@ -208,4 +208,77 @@ document.addEventListener("DOMContentLoaded", () => {
         exportData(filename, dialogues);
         downloadDialog.classList.toggle('show');
     })
+    document.getElementById('cancel-export').addEventListener('click', ()=>{
+        downloadDialog.classList.toggle('show');
+    })
+    document.getElementById('file-title').addEventListener('dblclick', ()=>{
+        var fileTitle = document.getElementById('file-title');
+        fileTitle.style.display = 'none';
+        var inputFeild = document.createElement('input');
+        inputFeild.id = 'input-file-title'
+        inputFeild.value = fileTitle.innerText;
+        fileTitle.parentNode.appendChild(inputFeild);
+        document.onclick = (e) => {
+            var target = (e.target || e.srcElement) as HTMLElement;
+            if(target.id != "input-file-title"){
+                fileTitle.innerText = inputFeild.value;
+                fileTitle.style.display = 'block';
+                inputFeild.parentNode.removeChild(inputFeild);
+                document.onclick = null;
+                document.onkeyup = null;
+            }
+        }
+
+        document.onkeyup = (e) =>{
+            if(e.keyCode == 13 || e.keyCode == 27){
+                fileTitle.innerText = inputFeild.value;
+                fileTitle.style.display = 'block';
+                inputFeild.parentNode.removeChild(inputFeild);
+                document.onclick = null;
+                document.onkeyup = null;
+            }
+        }
+    })
+    var fileInput = document.getElementById('file-input') as HTMLInputElement;
+    fileInput.addEventListener('change', () => {
+        var curFiles = fileInput.files;
+        if(curFiles.length === 1){
+            var file = curFiles[0];
+            var reader = new FileReader();
+            reader.onload = (ev) => {
+                if(reader.result != ""){
+                    var data = JSON.parse(reader.result);
+                    if(data.length != 0){
+                        for (var i = 0; i < data.length; i++) {
+                            var dialogue: Dialogue = data[i];
+                            var d = new Dialogue(dialogue.id, dialogue.text, dialogue.type);
+                            d.nextDialogue = dialogue.nextDialogue;
+                            dialogues.push(d);
+                            var el = dialogueHTML(d);
+                            el.style.top = "10px";
+                            el.style.left = "10px";
+                            dragElement(el);
+                            setLinks(el);
+                            projectE.appendChild(el);
+                        }
+                        dialogues.forEach(d => {
+                            if(d.nextDialogue.length != 0){
+                                d.nextDialogue.forEach(item => {
+                                    var elmnt1 = document.querySelector(".dialogue[data-id='" + d.id + "']") as HTMLDivElement;
+                                    var elmnt2 = document.querySelector(".dialogue[data-id='" + item + "']") as HTMLDivElement; 
+                                    var dimension = getDimensionDiff(elmnt1, elmnt2);
+                                    var shtml = createLine(dimension, elmnt1, elmnt2);
+                                    var projectE = document.getElementById('project');
+                                    projectE.appendChild(shtml);
+                                });
+                            }
+                        });
+
+                        count = data.length;
+                    }
+                }
+            }
+            reader.readAsBinaryString(file.slice());
+        }
+    })
 })

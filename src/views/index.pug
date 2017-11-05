@@ -8,7 +8,9 @@ html
             .title#file-title Untitled
             nav
                 .btn#add-dialog Add
-                .btn#open-file Open
+                .btn#open-file
+                    label(for="file-input") Open
+                        input(type="file", id="file-input", accept=".json")
                 .btn#export-file Export
         .input-dialog.clear#create-dialogue
             .header Create a Dialogue
@@ -21,12 +23,11 @@ html
                 .btn#cancel-dialogue Cancel
         .input-dialog#export-dialogues
             .header Export
-            
             .input
-                .btn Add
+                .btn Download
                     a#export-link
                         .btn-fill
-                .btn#cancel-dialogue Cancel
+                .btn#cancel-export Cancel
         .project#project
         script(src="js/main.js")
             
