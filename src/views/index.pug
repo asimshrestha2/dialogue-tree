@@ -9,8 +9,8 @@ html
             nav
                 .btn#add-dialog Add
                 .btn#open-file Open
-                .btn#about About
-        .input-dialog.clear
+                .btn#export-file Export
+        .input-dialog.clear#create-dialogue
             .header Create a Dialogue
             .input
                 textarea#dialogText(placeholder="Text")
@@ -18,6 +18,14 @@ html
                 input#dialogType(type="text", placeholder="Type")
             .input
                 .btn#add-dialogue Add
+                .btn#cancel-dialogue Cancel
+        .input-dialog#export-dialogues
+            .header Export
+            
+            .input
+                .btn Add
+                    a#export-link
+                        .btn-fill
                 .btn#cancel-dialogue Cancel
         .project#project
         script(src="js/main.js")

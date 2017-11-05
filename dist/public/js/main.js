@@ -38,7 +38,6 @@ function dragElement(elmnt) {
         elmnt.style.left = (elmnt.offsetLeft - pos.x) + "px";
         var id = elmnt.getAttribute("data-id");
         var svgs = document.querySelectorAll("svg[link*=\"" + id + "\"]");
-        console.log(svgs);
         for (var i = 0; i < svgs.length; i++) {
             var svg = svgs[i];
             var link = JSON.parse(svg.getAttribute("link"));
@@ -66,7 +65,6 @@ function setLinks(elmnt) {
     };
     entry.onclick = function (e) {
         var id = elmnt.getAttribute('data-id');
-        console.log(elmnt.offsetTop, elmnt.offsetLeft);
         if (currentID && dialogues[currentID].nextDialogue.indexOf(parseInt(id)) < 0) {
             dialogues[currentID].addNextDialogue(parseInt(id));
             var elmnt1 = document.querySelector(".dialogue[data-id='" + currentID + "']");
@@ -127,22 +125,23 @@ function getDimensionDiff(elmnt1, elmnt2) {
         height: (topMin == elmnt1.offsetTop) ? topMax - topMin - (elmnt1.offsetHeight / 2) + (elmnt2.offsetHeight / 2) :
             topMax - topMin - (elmnt2.offsetHeight / 2) + (elmnt1.offsetHeight / 2)
     };
-    console.log(rtn);
     return rtn;
 }
 function exportData(name, data) {
-    var a = document.createElement('a');
-    a.setAttribute('download', name);
+    var downloadDialog = document.getElementById('export-dialogues');
+    var a = document.getElementById('export-link');
+    a.setAttribute('download', name + ".json");
     a.setAttribute('href', 'data:application/json,' + encodeURIComponent(JSON.stringify(data)));
     a.setAttribute('target', '_blank');
-    a.innerHTML = "Link";
-    var projectE = document.getElementById('project');
-    projectE.appendChild(a);
+    a.onclick = function () {
+        downloadDialog.classList.toggle('show');
+    };
 }
 document.addEventListener("DOMContentLoaded", function () {
     var count = 0;
     var projectE = document.getElementById('project');
-    var inputDialog = document.getElementsByClassName('input-dialog')[0];
+    var inputDialog = document.getElementById('create-dialogue');
+    var downloadDialog = document.getElementById('export-dialogues');
     var addDialogueBtn = document.getElementById('add-dialogue');
     addDialogueBtn.addEventListener("click", function () {
         var inputText = document.getElementById("dialogText");
@@ -170,5 +169,10 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     document.getElementById('add-dialog').addEventListener('click', function () {
         inputDialog.classList.toggle('show');
+    });
+    document.getElementById('export-file').addEventListener('click', function () {
+        var filename = document.getElementById('file-title').innerText;
+        exportData(filename, dialogues);
+        downloadDialog.classList.toggle('show');
     });
 });

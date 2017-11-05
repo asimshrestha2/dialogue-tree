@@ -51,7 +51,6 @@ function dragElement(elmnt) {
         
         var id = elmnt.getAttribute("data-id");
         var svgs = document.querySelectorAll("svg[link*=\"" + id + "\"]");
-        console.log(svgs);
         for (var i = 0; i < svgs.length; i++) {
             var svg = svgs[i];
             var link = JSON.parse(svg.getAttribute("link"));
@@ -84,7 +83,6 @@ function setLinks(elmnt: HTMLDivElement){
 
     entry.onclick = (e) => {
         var id = elmnt.getAttribute('data-id');
-        console.log(elmnt.offsetTop, elmnt.offsetLeft);
         if(currentID && dialogues[currentID].nextDialogue.indexOf(parseInt(id)) < 0){
             dialogues[currentID].addNextDialogue(parseInt(id));
             var elmnt1 = document.querySelector(".dialogue[data-id='" + currentID + "']") as HTMLDivElement; 
@@ -158,24 +156,25 @@ function getDimensionDiff(elmnt1: HTMLDivElement, elmnt2: HTMLDivElement){
         height: (topMin == elmnt1.offsetTop)? topMax - topMin - (elmnt1.offsetHeight/2) + (elmnt2.offsetHeight/2):
         topMax - topMin - (elmnt2.offsetHeight/2) + (elmnt1.offsetHeight/2)
     }
-    console.log(rtn);
     return rtn;
 }
 
 function exportData(name: string, data: Dialogue[]){
-    var a = document.createElement('a');
-    a.setAttribute('download', name);
+    var downloadDialog = document.getElementById('export-dialogues');
+    var a = document.getElementById('export-link');
+    a.setAttribute('download', name + ".json");
     a.setAttribute('href', 'data:application/json,' + encodeURIComponent(JSON.stringify(data)));
     a.setAttribute('target', '_blank');
-    a.innerHTML = "Link";
-    var projectE = document.getElementById('project');
-    projectE.appendChild(a);
+    a.onclick = () => {
+        downloadDialog.classList.toggle('show');
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     var count = 0;
     var projectE = document.getElementById('project');
-    var inputDialog = document.getElementsByClassName('input-dialog')[0];
+    var inputDialog = document.getElementById('create-dialogue');
+    var downloadDialog = document.getElementById('export-dialogues');
     var addDialogueBtn = document.getElementById('add-dialogue');
     addDialogueBtn.addEventListener("click", () => {
         var inputText = (document.getElementById("dialogText") as HTMLTextAreaElement);
@@ -203,5 +202,10 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     document.getElementById('add-dialog').addEventListener('click', ()=>{
         inputDialog.classList.toggle('show');
+    })
+    document.getElementById('export-file').addEventListener('click', ()=>{
+        var filename = document.getElementById('file-title').innerText;
+        exportData(filename, dialogues);
+        downloadDialog.classList.toggle('show');
     })
 })

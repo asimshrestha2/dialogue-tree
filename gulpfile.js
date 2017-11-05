@@ -2,6 +2,7 @@ var gulp = require('gulp');
 var ts = require("gulp-typescript");
 var server = require('gulp-express');
 var tsProject = ts.createProject("tsconfig.json");
+var pug = require('gulp-pug');
 var browserSync = require('browser-sync').create();
 
 gulp.task('browserSync', function() {
@@ -41,3 +42,18 @@ gulp.task('watch', ['browserSync', 'dev', 'server'], function(){
 gulp.task('default', function() {
   // place code for your default task here
 });
+
+gulp.task('static-build', function(){
+    gulp.src("src/**/*.ts")
+        .pipe(tsProject())
+        .pipe(gulp.dest("dist"))
+
+    //view
+    gulp.src("dist/views/*.pug")
+        .pipe(pug())
+        .pipe(gulp.dest("static-build"))
+
+    //js and css
+    gulp.src("dist/public/**/*")
+        .pipe(gulp.dest("static-build"))
+})

@@ -23,6 +23,7 @@
     "browser-sync": "^2.18.13",
     "gulp": "^3.9.1",
     "gulp-express": "^0.3.5",
+    "gulp-pug": "^3.3.0",
     "gulp-typescript": "^3.2.2",
     "typescript": "^2.5.2"
   }
