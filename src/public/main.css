@@ -69,18 +69,22 @@ nav{
     right: 0;
     bottom: 0;
 }
+#open-file label, #open-file{
+    cursor: pointer;
+}
 
 #open-file input{
     position: absolute;
     top: 0;
+    left: 0;
     right: 0;
-    z-index: 10;
+    bottom: 0;
+    z-index: -1;
     width: 100%;
     height: 100%;
     font-size: 50px;
     cursor: pointer;
     opacity: 0;
-    padding-top: 100px;
 }
 
 .project{

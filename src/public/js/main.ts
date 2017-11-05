@@ -1,12 +1,12 @@
 class Dialogue{
     id: number;
     text: string;
-    type: string; //player or npc
+    actor: string; //player or npc
     nextDialogue: number[] = [];
-    constructor(id:number, text: string, type?: string){
+    constructor(id:number, text: string, actor?: string){
         this.id = id;
         this.text = text;
-        this.type = type || "npc";
+        this.actor = actor || "npc";
     }
     addNextDialogue(id: number){
         this.nextDialogue.push(id);
@@ -19,6 +19,7 @@ var dialogueHTML = (dialogue: Dialogue) => {
     retE.setAttribute("data-id", ""+dialogue.id);
     retE.innerHTML = `<div class="entry-point"></div>
     <div class="next-point"></div>
+    <div class="text">${dialogue.actor}</div>
     <div class="text">${dialogue.text}</div>`
     return retE;
 }
@@ -110,35 +111,83 @@ var makeSVG = (tag: string, attrs: {}) => {
 }
 
 var updateLine = (dimension: Dimension, elmnt1: HTMLDivElement, elmnt2: HTMLDivElement, elmnt: SVGElement) => {
-    elmnt.setAttribute('viewbox', "0 0 " + dimension.height + " " + dimension.width);
-    elmnt.setAttribute('style', "position: absolute; top: " + dimension.top + "; left: " + dimension.left
-         + "; width: " + dimension.width + "px; height: " + dimension.height + "px;");
-    
+    dimension = {
+        top: dimension.top,
+        left: dimension.left,
+        height: (dimension.height <= 12)? 12: dimension.height,
+        width: (dimension.width <= 12)? 12: dimension.width
+    }
     var line = elmnt.querySelector('line') as SVGElement
     var attrs = {};
+    var svgattrs = {viewbox: "0 0 " + dimension.width + " " + dimension.height,
+        style: "position: absolute; top: " + dimension.top + "px; left: " + dimension.left
+        + "px; width: " + dimension.width + "px; height: " + dimension.height + "px;"}
     
-    if(elmnt1.offsetTop < elmnt2.offsetTop){
-        attrs = (elmnt1.offsetLeft < elmnt2.offsetLeft) ?
-            {x1: "0", y1: "0", x2: dimension.width, y2: dimension.height} :
-            {x1: "0", y1: dimension.height, y2: "0", x2: dimension.width}
+    var link = JSON.parse(elmnt.getAttribute('link'));
+    var style = ""
+    if(link.start == elmnt1.getAttribute('data-id')){
+        style = (elmnt1.offsetLeft < elmnt2.offsetLeft)?
+            "marker-end: url(#arrowhead); marker-start: none;" :
+            "marker-start: url(#endarrow); marker-end: none;"
     } else {
-        attrs = (elmnt1.offsetLeft < elmnt2.offsetLeft) ?
-            {x1: "0", y1: dimension.height, y2: "0", x2: dimension.width} :
-            {x1: "0", y1: "0", x2: dimension.width, y2: dimension.height}
+        style = (elmnt1.offsetLeft > elmnt2.offsetLeft)?
+            "marker-end: url(#arrowhead); marker-start: none;" :
+            "marker-start: url(#endarrow); marker-end: none;"
     }
+
+    if(elmnt1.offsetTop < elmnt2.offsetTop){
+        if(elmnt1.offsetLeft < elmnt2.offsetLeft){
+            attrs = {x1: "0", y1: "0", x2: (dimension.width), y2: (dimension.height)}
+            console.log(1);
+        } else {
+            attrs = {x1: "0", y1: (dimension.height), y2: "0", x2: (dimension.width)}
+            console.log(2);
+        }
+    } else {
+        if(elmnt1.offsetLeft < elmnt2.offsetLeft){
+            attrs = {x1: "0", y1: (dimension.height), y2: "0", x2: dimension.width}
+            console.log(3);
+        } else {
+            attrs = {x1: "0", y1: "0", x2: (dimension.width), y2: dimension.height}
+            console.log(4);
+        }
+    }
+    attrs['style'] = style;
     for (var k in attrs)
         line.setAttribute(k, attrs[k]);
+    
+    for (var k in svgattrs)
+        elmnt.setAttribute(k, svgattrs[k]);
 }
 
 function createLine(dimension: Dimension, elmnt1: HTMLDivElement, elmnt2: HTMLDivElement){
+    dimension = {
+        top: dimension.top,
+        left: dimension.left,
+        height: (dimension.height <= 12)? 12: dimension.height,
+        width: (dimension.width <= 12)? 12: dimension.width
+    }
+    console.log(dimension)
     var retE = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     retE.setAttribute('viewbox', "0 0 " + dimension.height + " " + dimension.width);
     retE.setAttribute('style', "position: absolute; top: " + dimension.top + "; left: " + dimension.left
          + "; width: " + dimension.width + "px; height: " + dimension.height + "px;");
     retE.setAttribute('link', JSON.stringify({start: elmnt1.getAttribute('data-id'), end: elmnt2.getAttribute('data-id')}));
+    var def = makeSVG('defs', {});
+    var marker = makeSVG('marker', {id:"arrowhead", markerWidth:"12", markerHeight:"12", refX:"12", refY:"6", orient:"auto"});
+    var arrowhead = makeSVG('path', {d: "M0,0 L0,12 L12,6 L0,0", style:"fill: #000000;"})
+    marker.appendChild(arrowhead);
+    def.appendChild(marker);
+    
+    var marker2 = makeSVG('marker', {id:"endarrow", markerWidth:"12", markerHeight:"12", refX:"0", refY:"6", orient:"auto"});
+    var endarrow = makeSVG('path', {d: "M12,12 L12,0 L0,6 L12,12", style:"fill: #000000;"})
+    marker2.appendChild(endarrow);
+    def.appendChild(marker2);
+    
     var line = (elmnt1.offsetTop < elmnt2.offsetTop)?
-        makeSVG("line", {x1: "0", y1: "0", x2: dimension.width, y2: dimension.height, "stroke-width": "2", stroke:"black" }) :
-        makeSVG("line", {x1: "0", y2: "0", x2: dimension.width, y1: dimension.height, "stroke-width": "2", stroke:"black" })
+        makeSVG("line", {x1: "0", y1: "0", x2: dimension.width, y2: dimension.height, "stroke-width": "2", stroke:"black", 'style':"marker-end: url(#arrowhead);"}) :
+        makeSVG("line", {x1: "0", y2: "0", x2: dimension.width, y1: dimension.height, "stroke-width": "2", stroke:"black", 'style':"marker-end: url(#arrowhead);" })
+    retE.appendChild(def);
     retE.appendChild(line);
     return retE;
 }
@@ -178,9 +227,9 @@ document.addEventListener("DOMContentLoaded", () => {
     var addDialogueBtn = document.getElementById('add-dialogue');
     addDialogueBtn.addEventListener("click", () => {
         var inputText = (document.getElementById("dialogText") as HTMLTextAreaElement);
-        var inputType = (document.getElementById("dialogType") as HTMLInputElement);
+        var inputActor = (document.getElementById("dialogActor") as HTMLInputElement);
         if(inputText.value != null && inputText.value != ""){
-            var d = new Dialogue(count++, inputText.value, inputType.value);
+            var d = new Dialogue(count++, inputText.value, inputActor.value);
             dialogues.push(d);
             var el = dialogueHTML(d);
             el.style.top = "10px";
@@ -189,15 +238,15 @@ document.addEventListener("DOMContentLoaded", () => {
             setLinks(el);
             projectE.appendChild(el);
             inputText.value = ""
-            inputType.value = ""
+            inputActor.value = ""
             inputDialog.classList.toggle('show');
         }
     });
     document.getElementById('cancel-dialogue').addEventListener('click', ()=>{
         var inputText = (document.getElementById("dialogText") as HTMLTextAreaElement);
-        var inputType = (document.getElementById("dialogType") as HTMLInputElement);
+        var inputActor = (document.getElementById("dialogActor") as HTMLInputElement);
         inputText.value = ""
-        inputType.value = ""
+        inputActor.value = ""
         inputDialog.classList.toggle('show');
     })
     document.getElementById('add-dialog').addEventListener('click', ()=>{
@@ -251,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     if(data.length != 0){
                         for (var i = 0; i < data.length; i++) {
                             var dialogue: Dialogue = data[i];
-                            var d = new Dialogue(dialogue.id, dialogue.text, dialogue.type);
+                            var d = new Dialogue(dialogue.id, dialogue.text, dialogue.actor);
                             d.nextDialogue = dialogue.nextDialogue;
                             dialogues.push(d);
                             var el = dialogueHTML(d);
