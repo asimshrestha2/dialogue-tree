@@ -54,7 +54,9 @@ nav{
     background: #a1a1a1;
     overflow: auto;
 }
-
+.project svg{
+    z-index: 0;
+}
 .project svg > path {
     fill: #000000;
     stroke: #000000;
@@ -69,6 +71,7 @@ nav{
     border-radius: 3px;
     padding: 10px;
     background: #90CAF9;    
+    z-index: 1;
 }
 
 .dialogue .text{
