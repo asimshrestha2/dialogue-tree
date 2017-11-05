@@ -1,0 +1,29 @@
+{
+  "name": "dialogue-tree",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "compile": "gulp dev && node ./dist/index.js",
+    "dev": "nodemon --watch src --ext '.'  --exec \"npm run compile\""
+  },
+  "author": "Asim Shrestha",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^8.0.30",
+    "body-parser": "^1.18.2",
+    "express": "^4.15.4",
+    "pug": "^2.0.0-rc.4"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.16.5",
+    "@types/express": "^4.0.37",
+    "@types/pug": "^2.0.4",
+    "browser-sync": "^2.18.13",
+    "gulp": "^3.9.1",
+    "gulp-express": "^0.3.5",
+    "gulp-typescript": "^3.2.2",
+    "typescript": "^2.5.2"
+  }
+}

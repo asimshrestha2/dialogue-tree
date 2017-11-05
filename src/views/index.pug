@@ -1,0 +1,24 @@
+html
+    head
+        link(rel="stylesheet", href="https://fonts.googleapis.com/css?family=Oxygen:300,400")
+        link(rel="stylesheet", href="main.css")
+        title Dialogue Tree
+    body
+        header
+            .title#file-title Untitled
+            nav
+                .btn#add-dialog Add
+                .btn#open-file Open
+                .btn#about About
+        .input-dialog.clear
+            .header Create a Dialogue
+            .input
+                textarea#dialogText(placeholder="Text")
+            .input
+                input#dialogType(type="text", placeholder="Type")
+            .input
+                .btn#add-dialogue Add
+                .btn#cancel-dialogue Cancel
+        .project#project
+        script(src="js/main.js")
+            
