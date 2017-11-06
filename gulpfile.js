@@ -3,6 +3,9 @@ var ts = require("gulp-typescript");
 var server = require('gulp-express');
 var tsProject = ts.createProject("tsconfig.json");
 var pug = require('gulp-pug');
+var uglify = require('gulp-uglify');
+var htmlmin = require('gulp-htmlmin');
+let cleanCSS = require('gulp-clean-css');
 var browserSync = require('browser-sync').create();
 
 gulp.task('browserSync', function() {
@@ -50,10 +53,18 @@ gulp.task('static-build', function(){
 
     //view
     gulp.src("dist/views/*.pug")
-        .pipe(pug())
+        .pipe(pug({
+            pretty: true
+        }))
+        .pipe(htmlmin({collapseWhitespace: true}))
         .pipe(gulp.dest("static-build"))
 
-    //js and css
-    gulp.src("dist/public/**/*")
+    //css
+    gulp.src("dist/public/**/*.css")
+        .pipe(cleanCSS({compatibility: '*'}))
+        .pipe(gulp.dest("static-build"))
+    //js 
+    gulp.src("dist/public/**/*.js")
+        .pipe(uglify())
         .pipe(gulp.dest("static-build"))
 })
