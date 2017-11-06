@@ -19,7 +19,7 @@ var dialogueHTML = (dialogue: Dialogue) => {
     retE.setAttribute("data-id", ""+dialogue.id);
     retE.innerHTML = `<div class="entry-point"></div>
     <div class="next-point"></div>
-    <div class="text">${dialogue.actor}</div>
+    <div class="actor">${dialogue.actor}</div>
     <div class="text">${dialogue.text}</div>`
     return retE;
 }
@@ -55,10 +55,12 @@ function dragElement(elmnt) {
         for (var i = 0; i < svgs.length; i++) {
             var svg = svgs[i];
             var link = JSON.parse(svg.getAttribute("link"));
-            var otherID = (link.start == id) ? link.end : link.start;
-            var elmnt1 = document.querySelector(".dialogue[data-id='" + otherID + "']") as HTMLDivElement; 
-            var d = getDimensionDiff(elmnt1, elmnt);
-            updateLine(d, elmnt1, elmnt, svg as SVGElement);
+            if(link.start == id || link.end == id){
+                var otherID = (link.start == id) ? link.end : link.start;
+                var elmnt1 = document.querySelector(".dialogue[data-id='" + otherID + "']") as HTMLDivElement; 
+                var d = getDimensionDiff(elmnt1, elmnt);
+                updateLine(d, elmnt1, elmnt, svg as SVGElement);
+            }
         }
     }
   
@@ -138,18 +140,14 @@ var updateLine = (dimension: Dimension, elmnt1: HTMLDivElement, elmnt2: HTMLDivE
     if(elmnt1.offsetTop < elmnt2.offsetTop){
         if(elmnt1.offsetLeft < elmnt2.offsetLeft){
             attrs = {x1: "0", y1: "0", x2: (dimension.width), y2: (dimension.height)}
-            console.log(1);
         } else {
             attrs = {x1: "0", y1: (dimension.height), y2: "0", x2: (dimension.width)}
-            console.log(2);
         }
     } else {
         if(elmnt1.offsetLeft < elmnt2.offsetLeft){
             attrs = {x1: "0", y1: (dimension.height), y2: "0", x2: dimension.width}
-            console.log(3);
         } else {
             attrs = {x1: "0", y1: "0", x2: (dimension.width), y2: dimension.height}
-            console.log(4);
         }
     }
     attrs['style'] = style;
@@ -167,7 +165,7 @@ function createLine(dimension: Dimension, elmnt1: HTMLDivElement, elmnt2: HTMLDi
         height: (dimension.height <= 12)? 12: dimension.height,
         width: (dimension.width <= 12)? 12: dimension.width
     }
-    console.log(dimension)
+    // console.log(dimension)
     var retE = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     retE.setAttribute('viewbox', "0 0 " + dimension.height + " " + dimension.width);
     retE.setAttribute('style', "position: absolute; top: " + dimension.top + "; left: " + dimension.left
