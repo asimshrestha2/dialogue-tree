@@ -51,15 +51,15 @@ function dragElement(elmnt) {
         elmnt.style.left = (elmnt.offsetLeft - pos.x) + "px";
         
         var id = elmnt.getAttribute("data-id");
-        var svgs = document.querySelectorAll("svg[link*=\"" + id + "\"]");
-        for (var i = 0; i < svgs.length; i++) {
-            var svg = svgs[i];
-            var link = JSON.parse(svg.getAttribute("link"));
+        var lines = document.querySelectorAll("line[link*=\"" + id + "\"]");
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var link = JSON.parse(line.getAttribute("link"));
             if(link.start == id || link.end == id){
                 var otherID = (link.start == id) ? link.end : link.start;
                 var elmnt1 = document.querySelector(".dialogue[data-id='" + otherID + "']") as HTMLDivElement; 
                 var d = getDimensionDiff(elmnt1, elmnt);
-                updateLine(d, elmnt1, elmnt, svg as SVGElement);
+                updateLine(d, elmnt1, elmnt, line as SVGElement);
             }
         }
     }
@@ -90,9 +90,7 @@ function setLinks(elmnt: HTMLDivElement){
             dialogues[currentID].addNextDialogue(parseInt(id));
             var elmnt1 = document.querySelector(".dialogue[data-id='" + currentID + "']") as HTMLDivElement; 
             var d = getDimensionDiff(elmnt1, elmnt);
-            var shtml = createLine(d, elmnt1, elmnt);
-            var projectE = document.getElementById('project');
-            projectE.appendChild(shtml);
+            createLine(d, elmnt1, elmnt);
             currentID = null
         }
     }
@@ -112,21 +110,14 @@ var makeSVG = (tag: string, attrs: {}) => {
     return el;
 }
 
-var updateLine = (dimension: Dimension, elmnt1: HTMLDivElement, elmnt2: HTMLDivElement, elmnt: SVGElement) => {
-    dimension = {
-        top: dimension.top,
-        left: dimension.left,
-        height: (dimension.height <= 12)? 12: dimension.height,
-        width: (dimension.width <= 12)? 12: dimension.width
-    }
-    var line = elmnt.querySelector('line') as SVGElement
+var updateLine = (dimension: Dimension, elmnt1: HTMLDivElement, elmnt2: HTMLDivElement, line: SVGElement) => {
     var attrs = {};
     var svgattrs = {viewbox: "0 0 " + dimension.width + " " + dimension.height,
         style: "position: absolute; top: " + dimension.top + "px; left: " + dimension.left
         + "px; width: " + dimension.width + "px; height: " + dimension.height + "px;"}
     
-    var link = JSON.parse(elmnt.getAttribute('link'));
-    var style = ""
+    var link = JSON.parse(line.getAttribute('link'));
+    var style = "";
     if(link.start == elmnt1.getAttribute('data-id')){
         style = (elmnt1.offsetLeft < elmnt2.offsetLeft)?
             "marker-end: url(#arrowhead); marker-start: none;" :
@@ -139,55 +130,32 @@ var updateLine = (dimension: Dimension, elmnt1: HTMLDivElement, elmnt2: HTMLDivE
 
     if(elmnt1.offsetTop < elmnt2.offsetTop){
         if(elmnt1.offsetLeft < elmnt2.offsetLeft){
-            attrs = {x1: "0", y1: "0", x2: (dimension.width), y2: (dimension.height)}
+            attrs = {x1: dimension.left, y1: dimension.top, x2: dimension.width + dimension.left, y2: dimension.height + dimension.top}
         } else {
-            attrs = {x1: "0", y1: (dimension.height), y2: "0", x2: (dimension.width)}
+            attrs = {x1: dimension.left, y1: dimension.height + dimension.top, y2: dimension.top, x2: dimension.width + dimension.left}
         }
     } else {
         if(elmnt1.offsetLeft < elmnt2.offsetLeft){
-            attrs = {x1: "0", y1: (dimension.height), y2: "0", x2: dimension.width}
+            attrs = {x1: dimension.left, y1: dimension.height + dimension.top, y2: dimension.top, x2: dimension.width + dimension.left}
         } else {
-            attrs = {x1: "0", y1: "0", x2: (dimension.width), y2: dimension.height}
+            attrs = {x1: dimension.left, y1: dimension.top, x2: dimension.width + dimension.left, y2: dimension.height + dimension.top}
         }
     }
     attrs['style'] = style;
     for (var k in attrs)
         line.setAttribute(k, attrs[k]);
-    
-    for (var k in svgattrs)
-        elmnt.setAttribute(k, svgattrs[k]);
 }
 
 function createLine(dimension: Dimension, elmnt1: HTMLDivElement, elmnt2: HTMLDivElement){
-    dimension = {
-        top: dimension.top,
-        left: dimension.left,
-        height: (dimension.height <= 12)? 12: dimension.height,
-        width: (dimension.width <= 12)? 12: dimension.width
-    }
-    // console.log(dimension)
-    var retE = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    retE.setAttribute('viewbox', "0 0 " + dimension.height + " " + dimension.width);
-    retE.setAttribute('style', "position: absolute; top: " + dimension.top + "; left: " + dimension.left
-         + "; width: " + dimension.width + "px; height: " + dimension.height + "px;");
-    retE.setAttribute('link', JSON.stringify({start: elmnt1.getAttribute('data-id'), end: elmnt2.getAttribute('data-id')}));
-    var def = makeSVG('defs', {});
-    var marker = makeSVG('marker', {id:"arrowhead", markerWidth:"12", markerHeight:"12", refX:"12", refY:"6", orient:"auto"});
-    var arrowhead = makeSVG('path', {d: "M0,0 L0,12 L12,6 L0,0", style:"fill: #000000;"})
-    marker.appendChild(arrowhead);
-    def.appendChild(marker);
-    
-    var marker2 = makeSVG('marker', {id:"endarrow", markerWidth:"12", markerHeight:"12", refX:"0", refY:"6", orient:"auto"});
-    var endarrow = makeSVG('path', {d: "M12,12 L12,0 L0,6 L12,12", style:"fill: #000000;"})
-    marker2.appendChild(endarrow);
-    def.appendChild(marker2);
-    
+    var mainSVG = document.getElementById('main-svg');    
     var line = (elmnt1.offsetTop < elmnt2.offsetTop)?
-        makeSVG("line", {x1: "0", y1: "0", x2: dimension.width, y2: dimension.height, "stroke-width": "2", stroke:"black", 'style':"marker-end: url(#arrowhead);"}) :
-        makeSVG("line", {x1: "0", y2: "0", x2: dimension.width, y1: dimension.height, "stroke-width": "2", stroke:"black", 'style':"marker-end: url(#arrowhead);" })
-    retE.appendChild(def);
-    retE.appendChild(line);
-    return retE;
+        makeSVG("line", {x1: dimension.left, y1: dimension.top, x2: dimension.width + dimension.left, 
+            y2: dimension.height + dimension.top, "stroke-width": "2", stroke:"black", 'style':"marker-end: url(#arrowhead);",
+            link: JSON.stringify({start: elmnt1.getAttribute('data-id'), end: elmnt2.getAttribute('data-id')})}) :
+        makeSVG("line", {x1: dimension.left, y2: dimension.top, x2: dimension.width + dimension.left,
+            y1: dimension.height + dimension.top, "stroke-width": "2", stroke:"black", 'style':"marker-end: url(#arrowhead);",
+            link: JSON.stringify({start: elmnt1.getAttribute('data-id'), end: elmnt2.getAttribute('data-id')})})
+    mainSVG.appendChild(line);
 }
 
 function getDimensionDiff(elmnt1: HTMLDivElement, elmnt2: HTMLDivElement){
@@ -314,9 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     var elmnt1 = document.querySelector(".dialogue[data-id='" + d.id + "']") as HTMLDivElement;
                                     var elmnt2 = document.querySelector(".dialogue[data-id='" + item + "']") as HTMLDivElement; 
                                     var dimension = getDimensionDiff(elmnt1, elmnt2);
-                                    var shtml = createLine(dimension, elmnt1, elmnt2);
-                                    var projectE = document.getElementById('project');
-                                    projectE.appendChild(shtml);
+                                    createLine(dimension, elmnt1, elmnt2);
                                 });
                             }
                         });
