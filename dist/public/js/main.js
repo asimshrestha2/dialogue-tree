@@ -36,6 +36,12 @@ function dragElement(elmnt) {
         tpos.y = e.clientY;
         elmnt.style.top = (elmnt.offsetTop - pos.y) + "px";
         elmnt.style.left = (elmnt.offsetLeft - pos.x) + "px";
+        var projectE = document.getElementById('project');
+        var mainSVG = document.getElementById('main-svg');
+        if (projectE.scrollHeight != projectE.offsetHeight || projectE.scrollWidth != projectE.offsetWidth) {
+            mainSVG.setAttribute('viewbox', "0 0 " + projectE.scrollWidth + " " + projectE.scrollHeight);
+            mainSVG.setAttribute('style', "width: " + projectE.scrollWidth + "px; height: " + projectE.scrollHeight + "px;");
+        }
         var id = elmnt.getAttribute("data-id");
         var lines = document.querySelectorAll("line[link*=\"" + id + "\"]");
         for (var i = 0; i < lines.length; i++) {
